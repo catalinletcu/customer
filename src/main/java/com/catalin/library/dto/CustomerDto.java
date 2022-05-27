@@ -14,8 +14,8 @@ public class CustomerDto {
 
     private String lastName;
 
-    @NotNull(message = "UserName should not be null.")
-    private String userName;
+    @NotNull(message = "Username should not be null.")
+    private String username;
 
     @NotNull(message = "Password should not be null.")
     private String password;

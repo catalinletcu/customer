@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -23,7 +22,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class TokenAuthorizationFilter extends OncePerRequestFilter {
 
-    private static final String HEADER = "Authorization";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER = "Bearer ";
 
     private final LoginRepository loginRepository;
@@ -32,9 +31,12 @@ public class TokenAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        final String token = request.getHeader(HEADER);
         try {
-            setUpSpringAuthentication(isAuthorized(token));
+            final String token = extractToken(request.getHeader(AUTHORIZATION_HEADER));
+            final LoginEntity loginEntity = getLoginEntity(token);
+
+            validateTokenExpirationDate(loginEntity);
+            setUpSpringAuthentication(loginEntity.getCustomerId());
             filterChain.doFilter(request, response);
         } catch (BadCredentialsException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -42,29 +44,36 @@ public class TokenAuthorizationFilter extends OncePerRequestFilter {
         }
     }
 
-    private String isAuthorized(String token) {
+    private LoginEntity getLoginEntity(String token) {
+        return loginRepository.findByToken(token)
+                .orElseThrow(() -> new BadCredentialsException("Bad credentials."));
+    }
+
+    private String extractToken(String token) {
         if (token == null || token.isEmpty()) {
             throw new BadCredentialsException("Token expired.");
         }
         if (token.contains(BEARER)) {
             token = token.replace(BEARER, "");
         }
-        final Optional<LoginEntity> byToken = loginRepository.findByToken(token);
-        final LoginEntity loginEntity = byToken.orElseThrow(() -> new BadCredentialsException("Bad credentials."));
+
+        return token;
+    }
+
+    private void validateTokenExpirationDate(LoginEntity loginEntity) {
         if (loginEntity.getExpireDateTime().isBefore(LocalDateTime.now())) {
             throw new BadCredentialsException("Token expired");
         }
-        return loginEntity.getCustomerUserName();
     }
 
-    private void setUpSpringAuthentication(String customerUserName) {
+    private void setUpSpringAuthentication(Integer customerId) {
         final List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        final CustomerEntity customerEntity = Optional.ofNullable(customerRepository.getByUserName(customerUserName))
+        final CustomerEntity customerEntity = customerRepository.findById(customerId)
                 .orElseThrow(() -> new BadCredentialsException("Bad credentials"));
 
         authorities.add(new SimpleGrantedAuthority(customerEntity.getRole()));
         final UsernamePasswordAuthenticationToken authenticated = UsernamePasswordAuthenticationToken.authenticated(
-                customerEntity.getUserName(),
+                customerEntity.getUsername(),
                 customerEntity.getPassword(), authorities);
 
         SecurityContextHolder.getContext().setAuthentication(authenticated);

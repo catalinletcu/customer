@@ -1,5 +1,6 @@
-package com.catalin.library;
+package com.catalin.library.integration;
 
+import com.catalin.library.LibraryApplication;
 import com.catalin.library.dto.ApiError;
 import com.catalin.library.dto.BookDto;
 import com.catalin.library.entity.BookEntity;
@@ -8,12 +9,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SpringBootTest(classes = LibraryApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestPropertySource(properties = "spring.profiles.active=test")
+@ActiveProfiles("test")
 @Sql(scripts = "/scripts/truncate-tables.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 class BookControllerIntegrationTest {
 
@@ -74,7 +75,7 @@ class BookControllerIntegrationTest {
         final BookEntity bookEntity = createAndSaveBookEntity();
 
         final ResponseEntity<BookDto> responseEntity =
-                restTemplate.getForEntity(constructBaseUrl().path(bookEntity.getBookInternalId()).build().toUriString(), BookDto.class);
+                restTemplate.getForEntity(constructBaseUrl().path(bookEntity.getResourceId()).build().toUriString(), BookDto.class);
 
         assertNotNull(responseEntity);
         assertNotNull(responseEntity.getBody());
@@ -82,7 +83,7 @@ class BookControllerIntegrationTest {
         assertEquals(bookEntity.getTitle(), responseEntity.getBody().getTitle());
         assertEquals(bookEntity.getAuthor(), responseEntity.getBody().getAuthor());
         assertEquals(bookEntity.getType(), responseEntity.getBody().getType());
-        assertEquals(bookEntity.getBookInternalId(), responseEntity.getBody().getId());
+        assertEquals(bookEntity.getResourceId(), responseEntity.getBody().getId());
     }
 
     @Test
@@ -108,7 +109,7 @@ class BookControllerIntegrationTest {
         updatedBook.setTitle("selected poetry2");
 
         final ResponseEntity<BookDto> responseEntity =
-                restTemplate.exchange(constructBaseUrl().path(bookEntity.getBookInternalId()).build().toUriString(), HttpMethod.PUT,
+                restTemplate.exchange(constructBaseUrl().path(bookEntity.getResourceId()).build().toUriString(), HttpMethod.PUT,
                         new HttpEntity<>(updatedBook), BookDto.class);
 
         assertNotNull(responseEntity);
@@ -117,7 +118,7 @@ class BookControllerIntegrationTest {
         assertNull(responseEntity.getBody().getType());
         assertEquals(updatedBook.getTitle(), responseEntity.getBody().getTitle());
         assertEquals(updatedBook.getAuthor(), responseEntity.getBody().getAuthor());
-        assertEquals(bookEntity.getBookInternalId(), responseEntity.getBody().getId());
+        assertEquals(bookEntity.getResourceId(), responseEntity.getBody().getId());
     }
 
     @Test
@@ -140,12 +141,12 @@ class BookControllerIntegrationTest {
         final BookEntity bookEntity = createAndSaveBookEntity();
 
         final ResponseEntity<BookDto> responseEntity =
-                restTemplate.exchange(constructBaseUrl().path(bookEntity.getBookInternalId()).build().toUriString(), HttpMethod.DELETE,
+                restTemplate.exchange(constructBaseUrl().path(bookEntity.getResourceId()).build().toUriString(), HttpMethod.DELETE,
                         new HttpEntity<>(""), BookDto.class);
 
         assertNotNull(responseEntity);
         assertEquals(HttpStatus.NO_CONTENT, responseEntity.getStatusCode());
-        assertNull(bookRepository.getByBookInternalId(bookEntity.getBookInternalId()));
+        assertNull(bookRepository.getBookEntityByResourceId(bookEntity.getResourceId()));
     }
 
     private BookDto createBookDto() {
@@ -158,7 +159,7 @@ class BookControllerIntegrationTest {
 
     private BookEntity createAndSaveBookEntity() {
         final BookEntity request = new BookEntity();
-        request.setBookInternalId("123");
+        request.setResourceId("123");
         request.setAuthor("John");
         request.setTitle("selected poetry");
         return bookRepository.save(request);

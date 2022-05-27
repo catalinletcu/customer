@@ -20,10 +20,10 @@ public class BookService {
     private final BookMapper bookMapper;
     private final BookRepository bookRepository;
 
-    public BookDto createBook(BookDto request) {
-        verifyBook(request);
-        final BookEntity bookEntity = bookMapper.mapFromDto(request);
-        bookEntity.setBookInternalId(UUID.randomUUID().toString());
+    public BookDto createBook(BookDto book) {
+        verifyBook(book);
+        final BookEntity bookEntity = bookMapper.mapFromDto(book);
+        bookEntity.setResourceId(UUID.randomUUID().toString());
 
         return bookMapper.mapFromEntity(bookRepository.save(bookEntity));
     }
@@ -34,13 +34,13 @@ public class BookService {
         return bookMapper.mapFromEntity(bookEntity);
     }
 
-    public BookDto updateBookById(String bookId, BookDto request) {
+    public BookDto updateBookById(String bookId, BookDto book) {
         final BookEntity bookEntity = getBookEntity(bookId);
-        bookEntity.setType(request.getType());
-        bookEntity.setTitle(request.getTitle());
-        bookEntity.setAuthor(request.getAuthor());
+        bookEntity.setType(book.getType());
+        bookEntity.setTitle(book.getTitle());
+        bookEntity.setAuthor(book.getAuthor());
 
-        return bookMapper.mapFromEntity(bookRepository.getByBookInternalId(bookId));
+        return bookMapper.mapFromEntity(bookEntity);
     }
 
     public void deleteBookById(String bookId) {
@@ -49,7 +49,7 @@ public class BookService {
     }
 
     private BookEntity getBookEntity(String bookId) {
-        return Optional.ofNullable(bookRepository.getByBookInternalId(bookId))
+        return Optional.ofNullable(bookRepository.getBookEntityByResourceId(bookId))
                 .orElseThrow(() -> new NotFoundException(String.format("Book with id %s not found.", bookId)));
     }
 

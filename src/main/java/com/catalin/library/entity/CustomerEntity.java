@@ -31,7 +31,7 @@ public class CustomerEntity {
     private String lastName;
 
     @Column(nullable = false, unique = true)
-    private String userName;
+    private String username;
 
     @Column(nullable = false)
     private String password;

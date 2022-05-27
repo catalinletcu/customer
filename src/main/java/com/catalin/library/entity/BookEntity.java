@@ -26,7 +26,7 @@ public class BookEntity {
     @Setter(AccessLevel.NONE)
     private Integer id;
 
-    private String bookInternalId;
+    private String resourceId;
 
     private String title;
 

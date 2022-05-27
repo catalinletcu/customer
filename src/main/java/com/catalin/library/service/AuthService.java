@@ -40,7 +40,7 @@ public class AuthService {
         final CustomerEntity customerEntity = getCustomerEntity(username);
         final TokenResponse token = createToken();
         final LoginEntity loginEntity = new LoginEntity();
-        loginEntity.setCustomerUserName(customerEntity.getUserName());
+        loginEntity.setCustomerId(customerEntity.getId());
         loginEntity.setToken(token.getToken());
         loginEntity.setExpireDateTime(token.getExpireDateTime());
 
@@ -58,6 +58,6 @@ public class AuthService {
     }
 
     private CustomerEntity getCustomerEntity(String username) {
-        return customerRepository.getByUserName(username);
+        return customerRepository.getByUsername(username);
     }
 }

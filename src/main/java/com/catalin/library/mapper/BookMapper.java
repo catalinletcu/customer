@@ -21,7 +21,7 @@ public class BookMapper {
         destination.setAuthor(source.getAuthor());
         destination.setTitle(source.getTitle());
         destination.setType(source.getType());
-        destination.setId(source.getBookInternalId());
+        destination.setId(source.getResourceId());
 
         return destination;
     }

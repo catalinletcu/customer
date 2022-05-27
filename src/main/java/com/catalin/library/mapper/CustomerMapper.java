@@ -11,7 +11,7 @@ public class CustomerMapper {
         final CustomerEntity destination = new CustomerEntity();
         destination.setFirstName(source.getFirstName());
         destination.setLastName(source.getLastName());
-        destination.setUserName(source.getUserName());
+        destination.setUsername(source.getUsername());
         destination.setPassword(source.getPassword());
 
         return destination;
@@ -21,7 +21,7 @@ public class CustomerMapper {
         final CustomerDto destination = new CustomerDto();
         destination.setFirstName(source.getFirstName());
         destination.setLastName(source.getLastName());
-        destination.setUserName(source.getUserName());
+        destination.setUsername(source.getUsername());
         destination.setPassword(source.getPassword());
 
         return destination;
